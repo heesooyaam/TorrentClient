@@ -20,14 +20,14 @@ std::vector<Peer> ParsePeer(const std::string& peers)
 
         for(size_t j = 0; j < 4; ++j)
         {
-            result.back().ip += std::to_string((uint8_t ) IP[j]);
+            result.back().ip += std::to_string((uint8_t ) (unsigned char) IP[j]);
 
             if(j != 3) result.back().ip.push_back('.');
         }
 
         std::string port = peers.substr(i + 4, 2);
 
-        result.back().port = (uint16_t(port[0]) << 8) + uint16_t(port[1]);
+        result.back().port = (uint16_t((unsigned char) port[0]) << 8) + uint16_t((unsigned char) port[1]);
     }
     return result;
 }
