@@ -41,7 +41,7 @@ public:
                 cpr::Parameters {
                         {"info_hash", tf.infoHash},
                         {"peer_id", peerId},
-                        {"port", std::to_string(12345)},
+                        {"port", std::to_string(port)},
                         {"uploaded", std::to_string(0)},
                         {"downloaded", std::to_string(0)},
                         {"left", std::to_string(tf.length)},
