@@ -155,9 +155,9 @@ void TcpConnect::SendData(const std::string& data) const
 
     try {
         LoopSend(data);
-    } catch(const std::runtime_error& e)
+    } catch(...)
     {
-        throw e;
+        throw;
     }
 }
 void TcpConnect::CloseConnection()
