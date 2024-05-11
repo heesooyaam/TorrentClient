@@ -155,8 +155,7 @@ void TcpConnect::SendData(const std::string& data) const
 
     try {
         LoopSend(data);
-    } catch(...)
-    {
+    } catch(...) {
         throw;
     }
 }
