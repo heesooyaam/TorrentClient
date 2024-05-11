@@ -1,8 +1,10 @@
 #pragma once
 #include "byte_tools.h"
-#include <algorithm>
 #include <openssl/sha.h>
 #include <vector>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 
 int BytesToInt(std::string_view bytes)
 {
@@ -35,4 +37,12 @@ std::string CalculateSHA1(const std::string& msg)
     unsigned char hash[20];
     SHA1((const unsigned char*) msg.c_str(), msg.size(), hash);
     return std::string(hash, hash + 20);
+}
+
+std::string HexEncode(const std::string& input) {
+    std::ostringstream oss;
+    for(unsigned char c : input) {
+        oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(c);
+    }
+    return oss.str();
 }

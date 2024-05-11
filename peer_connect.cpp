@@ -26,13 +26,14 @@ size_t PeerPiecesAvailability::Size() const
     return cnt;
 }
 PeerConnect::PeerConnect(const Peer& peer, const TorrentFile& tf, std::string selfPeerId, PieceStorage& pieceStorage)
-: tf_(tf)
-, socket_(peer.ip, peer.port, 500ms, 500ms)
-, selfPeerId_(std::move(selfPeerId))
-, terminated_(false)
-, choked_(true)
-, pieceStorage_(pieceStorage)
-, pendingBlock_(false) {}
+        : tf_(tf)
+        , socket_(peer.ip, peer.port, 500ms, 500ms)
+        , selfPeerId_(std::move(selfPeerId))
+        , terminated_(false)
+        , choked_(true)
+        , pieceStorage_(pieceStorage)
+        , pendingBlock_(false)
+        , failed_(false) {}
 
 void PeerConnect::Run()
 {
@@ -45,12 +46,14 @@ void PeerConnect::Run()
                 MainLoop();
             } catch(const std::exception& e)
             {
+                failed_ = true;
                 std::cerr << "Ooops... something wrong in MAIN LOOP: " << e.what() << std::endl;
                 Terminate();
             }
         }
         else
         {
+            failed_ = true;
             std::cerr << "Cannot establish connection to peer" << std::endl;
             Terminate();
         }
@@ -165,6 +168,7 @@ void PeerConnect::RequestPiece()
                 socket_.SendData(message.ToString());
                 pendingBlock_ = true;
                 pieceInProgress_->SetPended(block->offset);
+                std::cerr << "Logger: Request was sent" << std::endl;
             }
             else
             {
@@ -176,6 +180,13 @@ void PeerConnect::RequestPiece()
 
 void PeerConnect::MainLoop() {
     while (!terminated_) {
+
+        if(pieceStorage_.QueueIsEmpty())
+        {
+            std::cerr << "Logger: pieces queue is empty -> terminating..." << std::endl;
+            Terminate();
+            return;
+        }
 
         auto message = Message::Parse(socket_.ReceiveData());
 
@@ -203,7 +214,7 @@ void PeerConnect::MainLoop() {
         else if(message.id == MessageId::Piece)
         {
             std::cerr << "Logger: got message Piece" << std::endl;
-            auto idx = BytesToInt(message.payload.substr(0, 4));
+            size_t idx = BytesToInt(message.payload.substr(0, 4));
             auto begin = BytesToInt(message.payload.substr(4, 4));
             auto block = message.payload.substr(8);
 
@@ -214,7 +225,6 @@ void PeerConnect::MainLoop() {
                 {
                     pieceStorage_.PieceProcessed(pieceInProgress_);
                     pieceInProgress_ = nullptr;
-                    Terminate();
                 }
             }
             pendingBlock_ = false;
@@ -224,4 +234,9 @@ void PeerConnect::MainLoop() {
             RequestPiece();
         }
     }
+}
+
+bool PeerConnect::Failed() const
+{
+    return failed_;
 }

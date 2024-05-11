@@ -11,8 +11,8 @@ Piece::Piece(size_t index, size_t length, std::string hash)
 : index_(index)
 , length_(length)
 , hash_(std::move(hash))
-, retrieved_counter(0)
 , blocks_(length / BLOCK_SIZE + bool(length % BLOCK_SIZE), Block())
+, retrieved_counter(0)
 {
     SplitIntoBlocks();
 }
@@ -36,13 +36,13 @@ void Piece::SaveBlock(size_t blockOffset, std::string data)
 {
     int block_index = blockOffset / BLOCK_SIZE;
 
-    if(blocks_[block_index].status != Block::Status::Retrieved)
+    if(blocks_[block_index].status == Block::Status::Pending)
     {
         ++retrieved_counter;
+        blocks_[block_index].data = std::move(data);
+        blocks_[block_index].status = Block::Status::Retrieved;
     }
 
-    blocks_[block_index].data = std::move(data);
-    blocks_[block_index].status = Block::Status::Retrieved;
 }
 
 bool Piece::AllBlocksRetrieved() const
@@ -102,5 +102,8 @@ void Piece::SetPended(size_t offset)
     blocks_[block_index].status = Block::Status::Pending;
 }
 
-
+size_t Piece::Length() const
+{
+    return length_;
+}
 

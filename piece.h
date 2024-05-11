@@ -83,6 +83,11 @@ public:
      */
     void Reset();
 
+    /*
+     * Вернуть длину куска
+     */
+    size_t Length() const;
+
 private:
     const size_t index_, length_;
     const std::string hash_;
